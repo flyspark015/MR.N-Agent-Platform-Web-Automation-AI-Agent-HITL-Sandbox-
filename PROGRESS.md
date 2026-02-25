@@ -34,3 +34,11 @@ Milestones (R3.1 Stabilization):
 - [x] R3.1-M2: discover_sources rewrite
 - [x] R3.1-M3: controller selector integration
 - [x] R3.1-M4: verification tests
+
+Milestones (R3.2 Google hardening):
+
+- [x] R3.2-M1: google extraction hardening
+- [ ] R3.2-M2: failsafe discovery pipeline
+- [ ] R3.2-M3: ranking improvements
+- [ ] R3.2-M4: discovery benchmarks + CLI hook
+- [ ] R3.2-M5: docs updates
