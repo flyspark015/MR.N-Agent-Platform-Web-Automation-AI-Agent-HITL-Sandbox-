@@ -28,6 +28,28 @@ Local, single-user AI web automation agent that runs on localhost. No accounts, 
 
 User ? CLI ? Snapshot ? Decide ? Act ? Verify ? Recover ? Critic ? Repeat ? Results
 
+## Source Discovery Reliability (R3.2)
+
+- Google extraction hardened with multi-strategy parsing
+- Organic results only (no ads, no Google properties)
+- Failsafe query refinements when results are thin
+- Ranked by credibility heuristics
+- Benchmarked with discovery suite
+
+Run the discovery benchmark:
+
+```
+python -m benchmarks.discovery_suite
+```
+
+Or in the CLI:
+
+```
+/bench discovery
+```
+
+Target success rate: >= 80% goals with >= 4 unique non-Google domains.
+
 ## Capabilities (Phase 2 Loop)
 
 - Sense/decide/act loop with snapshots
