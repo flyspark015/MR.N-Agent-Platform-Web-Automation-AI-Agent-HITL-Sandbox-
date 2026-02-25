@@ -43,27 +43,29 @@ def build_layout(controller: AgentController) -> Layout:
     with controller.state.lock:
         status = controller.state.status
         current_url = controller.state.current_url
-        plan = controller.state.plan
+        current_title = controller.state.current_title
+        actions = controller.state.actions
 
     status_text = f"{status} | {current_url}" if current_url else status
+    if current_title:
+        status_text = f"{status_text} | {current_title}"
     layout["status"].update(Panel(status_text, title="Status", style="bold cyan"))
 
     steps_table = Table(box=box.SIMPLE, expand=True)
-    steps_table.add_column("ID", width=4)
-    steps_table.add_column("TYPE", width=10)
+    steps_table.add_column("#", width=4)
+    steps_table.add_column("TYPE", width=12)
     steps_table.add_column("STATUS", width=10)
-    steps_table.add_column("DESC")
+    steps_table.add_column("REASON")
 
-    if plan:
-        for step in plan.steps:
-            steps_table.add_row(
-                str(step.id),
-                step.type,
-                step.status,
-                step.description,
-            )
+    for record in actions[-15:]:
+        steps_table.add_row(
+            str(record.index),
+            record.action.type,
+            record.status,
+            record.action.reason,
+        )
 
-    layout["steps"].update(Panel(steps_table, title="Steps"))
+    layout["steps"].update(Panel(steps_table, title="Actions"))
 
     log_table = Table(box=box.SIMPLE, expand=True)
     log_table.add_column("TAG", width=10)
@@ -166,15 +168,12 @@ def main() -> None:
                 continue
 
             if command == "/open-last-screenshot":
-                plan = controller.state.plan
-                if not plan:
+                with controller.state.lock:
+                    shot = controller.state.last_screenshot
+                if not shot:
                     console.print("No run yet.")
                     continue
-                last = next((s for s in reversed(plan.steps) if s.result and s.result.screenshot_path), None)
-                if last and last.result:
-                    console.print(last.result.screenshot_path)
-                else:
-                    console.print("No screenshot found.")
+                console.print(shot)
                 continue
 
             console.print("Unknown command. Type /help.")

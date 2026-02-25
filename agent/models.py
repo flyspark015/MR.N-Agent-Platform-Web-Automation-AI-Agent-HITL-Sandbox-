@@ -52,3 +52,7 @@ class RunResult(BaseModel):
     status: Literal["DONE", "FAILED", "CANCELLED"]
     steps: List[Step]
     summary: Optional[str] = None
+    final_url: Optional[str] = None
+    final_title: Optional[str] = None
+    key_findings: Optional[Dict[str, str]] = None
+    evidence: Optional[List[str]] = None
