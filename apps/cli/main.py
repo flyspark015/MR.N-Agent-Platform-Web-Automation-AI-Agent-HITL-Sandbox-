@@ -12,6 +12,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from apps.cli.controller import AgentController
+from core.research_commands import cmd_research, cmd_sources, cmd_intelligence
 from storage.fs import result_path
 
 console = Console()
@@ -24,6 +25,9 @@ HELP_TEXT = """Commands:
   /cancel
   /export
   /open-last-screenshot
+  /research <goal>
+  /sources <goal>
+  /intelligence <goal>
   /help
   exit
 """
@@ -131,6 +135,21 @@ def main() -> None:
                     continue
                 running_thread = threading.Thread(target=controller.run_goal_sync, args=(goal,), daemon=True)
                 running_thread.start()
+                continue
+
+            if command.startswith("/research "):
+                goal = command.replace("/research ", "", 1).strip()
+                console.print(asyncio.run(cmd_research(goal)))
+                continue
+
+            if command.startswith("/sources "):
+                goal = command.replace("/sources ", "", 1).strip()
+                console.print(asyncio.run(cmd_sources(goal)))
+                continue
+
+            if command.startswith("/intelligence "):
+                goal = command.replace("/intelligence ", "", 1).strip()
+                console.print(asyncio.run(cmd_intelligence(goal)))
                 continue
 
             if command == "/retry":
