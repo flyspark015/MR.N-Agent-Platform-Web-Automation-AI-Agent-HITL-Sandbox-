@@ -27,3 +27,10 @@ Milestones (Research core integration):
 - [x] R3-M5: intelligence cache
 - [x] R3-M6: CLI commands
 - [x] R3-M7: playbook decision upgrade
+
+Milestones (R3.1 Stabilization):
+
+- [x] R3.1-M1: google extraction engine
+- [ ] R3.1-M2: discover_sources rewrite
+- [ ] R3.1-M3: controller selector integration
+- [ ] R3.1-M4: verification tests
