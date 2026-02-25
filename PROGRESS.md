@@ -12,7 +12,7 @@ Milestones (Research v2):
 
 - [x] R2-M1: query engine
 - [x] R2-M2: multi-query search + diversity enforcement
-- [ ] R2-M3: credibility scoring
+- [x] R2-M3: credibility scoring
 - [ ] R2-M4: structured extraction v2
 - [ ] R2-M5: synthesis engine
 - [ ] R2-M6: coverage critic upgrade
