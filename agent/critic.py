@@ -1,53 +1,49 @@
 from __future__ import annotations
 
-import json
-import os
+from typing import List, Dict
 
-from dotenv import load_dotenv
-from openai import OpenAI
+from skills.research.source_scoring import SourceScore
 
-load_dotenv()
 
-CRITIC_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "goal_met": {"type": "boolean"},
-        "missing_info": {"type": "array", "items": {"type": "string"}},
-        "next_step": {"type": "string"},
-    },
-    "required": ["goal_met", "missing_info", "next_step"],
-    "additionalProperties": False,
-}
+def evaluate_research_coverage(
+    domains: List[str],
+    extractions: List[Dict[str, object]],
+    scores: List[SourceScore],
+) -> Dict[str, object]:
+    missing = []
+    coverage = 0
 
-async def evaluate(goal: str, snapshot, actions) -> dict:
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        return {"goal_met": False, "missing_info": ["OPENAI_API_KEY missing"], "next_step": "Set API key"}
+    if len(set(domains)) >= 4:
+        coverage += 25
+    else:
+        missing.append("domain_diversity")
 
-    client = OpenAI(api_key=api_key)
+    claims = sum(len(x.get("claims", [])) for x in extractions)
+    if claims >= 5:
+        coverage += 25
+    else:
+        missing.append("claims")
 
-    payload = {
-        "goal": goal,
-        "url": snapshot.url,
-        "title": snapshot.title,
-        "visible_text": snapshot.visible_text_summary,
-        "actions": [a.type for a in actions[-5:]],
+    stats = sum(len(x.get("statistics", [])) for x in extractions)
+    if stats >= 2:
+        coverage += 15
+    else:
+        missing.append("statistics")
+
+    opposing = sum(len(x.get("contradictions", [])) for x in extractions)
+    if opposing >= 1:
+        coverage += 15
+    else:
+        missing.append("opposing_view")
+
+    recent = any("202" in d for x in extractions for d in x.get("dates", []))
+    if recent:
+        coverage += 20
+    else:
+        missing.append("recent_info")
+
+    return {
+        "coverage_score": coverage,
+        "missing_dimensions": missing,
+        "continue_required": coverage < 70,
     }
-
-    response = client.responses.create(
-        model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-        input=[
-            {"role": "system", "content": "Evaluate if goal is achieved. Return JSON only."},
-            {"role": "user", "content": json.dumps(payload)},
-        ],
-        text={
-            "format": {
-                "type": "json_schema",
-                "name": "critic",
-                "schema": CRITIC_SCHEMA,
-                "strict": True,
-            }
-        },
-    )
-
-    return json.loads(response.output_text)
