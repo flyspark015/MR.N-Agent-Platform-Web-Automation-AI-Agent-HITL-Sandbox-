@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Dict, List
 
+from core.intelligence_cache import get_cache, set_cache
 from skills.research.query_engine import generate_query_variants
 from skills.research.source_scoring import score_source
 from skills.research.extract import extract_structured
@@ -16,21 +17,35 @@ from agent.actions import Action
 CACHE_DIR = Path("data/intelligence_cache")
 
 async def discover_sources(goal: str, max_results: int = 10) -> List[str]:
+    cached = get_cache(f"discover_{goal}")
+    if cached:
+        return cached.get("urls", [])
     queries = await generate_query_variants(goal)
     urls: List[str] = []
     for q in queries:
         urls.append(f"https://www.google.com/search?q={q['query'].replace(' ', '+')}")
+    set_cache(f"discover_{goal}", {"urls": urls[:max_results]})
     return urls[:max_results]
 
 async def generate_context(goal: str) -> Dict[str, object]:
-    return {"goal": goal, "queries": await generate_query_variants(goal)}
+    cached = get_cache(f"context_{goal}")
+    if cached:
+        return cached
+    ctx = {"goal": goal, "queries": await generate_query_variants(goal)}
+    set_cache(f"context_{goal}", ctx)
+    return ctx
 
 async def rank_sites(urls: List[str]) -> List[Dict[str, object]]:
+    cache_key = f"rank_{hash(tuple(urls))}"
+    cached = get_cache(cache_key)
+    if cached:
+        return cached.get("ranked", [])
     ranked = []
     for url in urls:
         score = score_source(url)
         ranked.append({"url": url, "score": score.score, "source_type": score.source_type})
     ranked.sort(key=lambda x: -x["score"])
+    set_cache(cache_key, {"ranked": ranked})
     return ranked
 
 async def extract_intelligence(pages: List[Dict[str, str]]) -> Dict[str, object]:
