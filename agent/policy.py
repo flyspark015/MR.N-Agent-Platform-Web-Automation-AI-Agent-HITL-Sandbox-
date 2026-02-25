@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import re
 
-LOGIN_HINTS = re.compile(r"login|sign in|signin|otp|verification|captcha", re.I)
+LOGIN_HINTS = re.compile(
+    r"login|sign in|signin|otp|verification|captcha|payment|checkout|purchase|send|email|delete|cancel|account|settings",
+    re.I,
+)
 
 async def needs_takeover(page, error: str | None = None) -> bool:
     if error and LOGIN_HINTS.search(error):
