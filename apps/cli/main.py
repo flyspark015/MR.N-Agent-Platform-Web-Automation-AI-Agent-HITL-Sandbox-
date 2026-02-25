@@ -16,6 +16,7 @@ from apps.cli.controller import AgentController
 from core.config import APP_NAME, APP_VERSION
 from core.research_commands import cmd_research, cmd_sources, cmd_intelligence
 from core.setup import ensure_env
+from storage.fs import run_dir
 from storage.fs import result_path
 
 console = Console()
@@ -57,6 +58,7 @@ def build_layout(controller: AgentController) -> Layout:
         budget = controller.state.budget
         session_status = controller.state.session_status
 
+    run_dir_path = str(run_dir(run_id)) if run_id else ""
     header = (
         f"{APP_NAME} {APP_VERSION}\n"
         f"Mode: {mode} | Playbook: {playbook} ({confidence:.0%})\n"
@@ -65,6 +67,7 @@ def build_layout(controller: AgentController) -> Layout:
         f"Budget: {budget}\n"
         f"Session: {session_status}\n"
         f"Run: {run_id}\n"
+        f"Run Dir: {run_dir_path}\n"
         f"Last Screenshot: {last_shot}"
     )
 
@@ -176,8 +179,12 @@ def main() -> None:
                 continue
 
             if command == "/takeover":
+                with controller.state.lock:
+                    controller.state.mode = "TAKEOVER"
                 console.print("TAKEOVER: Complete actions in browser then press ENTER")
                 input()
+                with controller.state.lock:
+                    controller.state.mode = "SAFE"
                 continue
 
             if command == "/stop":

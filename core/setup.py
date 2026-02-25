@@ -9,6 +9,8 @@ EXAMPLE_PATH = Path(".env.example")
 
 
 def ensure_env() -> None:
+    if os.getenv("OPENAI_API_KEY"):
+        return
     if ENV_PATH.exists():
         return
     if EXAMPLE_PATH.exists():

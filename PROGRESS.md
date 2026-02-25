@@ -49,4 +49,4 @@ Milestones (UX release):
 - [x] UX-M2: first run wizard
 - [x] UX-M3: README human setup guide
 - [x] UX-M4: smoke test + human testing doc
-- [ ] UX-M5: fix blockers found
+- [x] UX-M5: fix blockers found

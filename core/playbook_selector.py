@@ -34,6 +34,7 @@ class PlaybookSelector:
         decision = await self.classify(goal)
         playbook_type = decision["playbook_type"]
         if bus:
+            bus.emit("plan", decision)
             bus.emit("log", {"tag": "PLAN", "message": f"playbook={playbook_type} confidence={decision['confidence']} reason={decision['reasoning_summary']}"})
         self.runner.classify = lambda _: playbook_type
         return await self.runner.run(goal, config, bus=bus)

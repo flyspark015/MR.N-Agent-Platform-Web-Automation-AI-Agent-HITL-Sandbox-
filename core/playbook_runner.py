@@ -6,6 +6,7 @@ from typing import Callable, Dict, List, Optional, Type
 
 from agent.critic import evaluate
 from core.runtime import RuntimeConfig
+from core.events import EventBus
 from browser.session import BrowserSession
 from browser.perceive import get_snapshot
 from browser.tools import execute_action, autopilot_handlers
