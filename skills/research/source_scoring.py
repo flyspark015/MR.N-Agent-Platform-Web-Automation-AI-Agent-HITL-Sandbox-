@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict
+from typing import Optional
 import re
 from urllib.parse import urlparse
 
@@ -15,6 +15,9 @@ MAJOR_NEWS = {
     "apnews.com",
 }
 
+SPAM_DOMAINS = {"pinterest.com", "medium.com", "reddit.com"}
+BONUS_KEYWORDS = ["official", "docs", "documentation", "pdf", "whitepaper", "download", "pricing"]
+
 @dataclass
 class SourceScore:
     url: str
@@ -23,7 +26,7 @@ class SourceScore:
     source_type: str
 
 
-def score_source(url: str) -> SourceScore:
+def score_source(url: str, snippet: Optional[str] = None) -> SourceScore:
     domain = urlparse(url).netloc.lower()
     score = 40
     source_type = "unknown"
@@ -45,7 +48,19 @@ def score_source(url: str) -> SourceScore:
         score = 45
         source_type = "blog"
 
+    if domain in SPAM_DOMAINS:
+        score -= 15
+
+    if any(k in url.lower() for k in ["/docs", ".pdf", "whitepaper", "download"]):
+        score += 10
+
+    if snippet:
+        snip = snippet.lower()
+        if any(k in snip for k in BONUS_KEYWORDS):
+            score += 5
+
     if date_hint:
         score = min(100, score + 5)
 
+    score = max(0, min(100, score))
     return SourceScore(url=url, domain=domain, score=score, source_type=source_type)
