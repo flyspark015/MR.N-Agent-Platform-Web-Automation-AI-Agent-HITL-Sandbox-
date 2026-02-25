@@ -1,7 +1,9 @@
-/node_modules
-/.next
-/.env
-/data/results/*.json
+/.venv
+/__pycache__
+/data/results
 /data/screenshots
 /data/traces
-/repo.zip
+/data/logs
+/.env
+/node_modules
+/.next

@@ -1,9 +1,10 @@
 # Progress
 
-- [x] Phase 1: Scaffold + Docker + UI textbox
-- [x] Phase 2: Planner works
-- [x] Phase 3: Playwright worker executes NAVIGATE
-- [ ] Phase 4: Screenshots + traces saved locally
-- [ ] Phase 5: Extraction working
-- [ ] Phase 6: Result viewer UI
-- [ ] Phase 7: Takeover mode
+Milestones (CLI-only redesign):
+
+- [x] M0: repo cleanup + CLI skeleton
+- [x] M1: planner + plan display
+- [x] M2: Playwright NAVIGATE + screenshot
+- [x] M3: extraction + result.json
+- [x] M4: takeover mode
+- [x] M5: TUI polish + commands + docs

@@ -1,51 +1,54 @@
-# MR.N Local Agent
+# MR.N CLI Agent
 
 Local, single-user AI web automation agent that runs on localhost. No accounts, no multi-user, no SaaS, no cloud deployment.
 
 ## Project Purpose (Current Scope)
 
 - Local AI web automation agent
-- Runs on `localhost`
+- Runs on `localhost` via terminal (CLI-only)
 - Uses user-provided `OPENAI_API_KEY`
 - No accounts, no multi-user, no RBAC, no cloud infrastructure
 
-## Architecture (Phase 3)
+## Architecture (Phase 3+ CLI)
 
-- **API**: FastAPI (`apps/api`) for planning + dispatching
-- **Worker**: Playwright Chromium headless (`apps/worker`) for navigation + screenshots
-- **UI**: Next.js (`apps/ui`) for task input and results
+- **CLI**: Rich-based TUI (`apps/cli`) for goals, progress, and logs
+- **Agent**: Planner + executor (`agent/`)
+- **Browser**: Playwright Chromium (`browser/`)
+- **Storage**: Local filesystem (`storage/`)
+- **Logs**: Structured logs + optional JSONL (`logs/`)
 - **Local storage**:
   - `./data/screenshots` (current)
-  - `./data/results` (future)
-  - `./data/traces` (future)
+  - `./data/results` (current)
+  - `./data/traces` (optional)
+  - `./data/logs` (optional)
 
 **Text diagram**
 
-User ? UI ? API ? Worker ? Browser ? Screenshot ? UI
+User ? CLI ? Planner ? Executor ? Playwright ? Screenshot/Results ? CLI
 
 ## Phase 3 Capability (What Works Today)
 
 - Planner creates a `NAVIGATE` step
-- Worker launches Chromium (headless)
+- Worker launches Chromium (headed by default)
 - Navigates to URL
 - Captures screenshot
 - Returns:
   - final URL
   - page title
   - status
-- UI displays screenshot + metadata
+- CLI displays screenshot path + metadata
 
 ## Features
 
-- Local planning endpoint
+- Local planning endpoint (OpenAI via `OPENAI_API_KEY`)
 - Playwright navigation + screenshot capture
-- UI to run a task and view results
+- CLI/TUI with live steps and logs
 
 ## Getting Started
 
 ### Prerequisites
 
-- Docker Desktop installed and running
+- Python 3.11 recommended
 - OpenAI API key
 
 ### First Run / Setup
@@ -65,122 +68,112 @@ OPENAI_API_KEY=your_key_here
 
 > Note: When a CLI prompt is added in a future phase, it should only ask once and store the key so it is not requested again unless the key is removed.
 
-### Run (Docker)
+### Setup
 
 ```
-docker compose -f infra/docker-compose.yml up --build
+python -m venv .venv
 ```
 
-Open:
+Activate:
 
 ```
-http://localhost:3000
+# Windows
+.\.venv\Scripts\activate
+
+# macOS/Linux
+source .venv/bin/activate
 ```
 
-Test task:
+Install:
 
 ```
-Open https://example.com
+pip install -r requirements.txt
+python -m playwright install chromium
+```
+
+Run:
+
+```
+python -m apps.cli.main
+```
+
+Test goal:
+
+```
+Open https://example.com and tell me the page title
 ```
 
 Expected result:
 
-- Screenshot appears in the UI
-- File saved to `./data/screenshots/{task_id}_{step_id}.png`
+- Screenshot path printed in logs
+- File saved to `./data/screenshots/{task_id}_step_1.png`
+- Result saved to `./data/results/{task_id}.json`
+- CLI shows final URL and title
 
 ## Current Capabilities
 
-- Only `NAVIGATE` is executed end-to-end
-- Results include screenshot, final URL, and page title
+- `NAVIGATE` and `EXTRACT` work end-to-end
+- Screenshots saved per step
+- Results saved to `data/results`
 
 ## Next Phase
 
-- Add screenshots + traces per step (Phase 4)
-- Add extraction and results view (Phase 5/6)
-- Add takeover mode (Phase 7)
+- Click/Type reliability
+- Extraction schemas
+- TUI polish + command improvements
 
 ## Localhost Test
 
 ### Quick Start (Minimal)
 
 ```
-docker compose -f infra/docker-compose.yml up --build
-```
-
-Then in another terminal:
-
-```
-curl http://localhost:8000/health
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements.txt
+python -m playwright install chromium
+python -m apps.cli.main
 ```
 
 ### Full Local Tests (Manual)
 
-These commands validate each app layer. Some steps may fail if you do not have local Node/Python installed and prefer Docker-only workflows.
-
-UI:
+Planner schema validation:
 
 ```
-cd apps/ui
-npm install
-npm run build
-npm run lint
+python -c "from agent.models import Plan; Plan.model_json_schema(); print('OK')"
 ```
 
-API:
+Storage paths:
 
 ```
-cd apps/api
-pip install -r requirements.txt
-python -m uvicorn main:app --host 0.0.0.0 --port 8000
+python -c "from storage.files import ensure_dirs; ensure_dirs(); print('OK')"
 ```
 
-Worker:
+Run the CLI:
 
 ```
-cd apps/worker
-pip install -r requirements.txt
-python -m playwright install --with-deps chromium
-python main.py
-```
-
-Smoke test (API):
-
-```
-curl http://localhost:8000/health
-```
-
-Planner test:
-
-```
-curl -X POST http://localhost:8000/plan -H "Content-Type: application/json" -d "{\"task\":\"Open https://example.com\"}"
-```
-
-Run test (end-to-end):
-
-```
-curl -X POST http://localhost:8000/run -H "Content-Type: application/json" -d "{\"task\":\"Open https://example.com\"}"
+python -m apps.cli.main
 ```
 
 Expected results:
 
-- `/health` returns `{"status":"ok"}`
-- `/plan` returns a JSON plan with a `NAVIGATE` step
-- `/run` returns a plan with `status=COMPLETED` and a `screenshot_url`
-- UI renders the screenshot and metadata
+- Planner schema prints `OK`
+- Storage setup prints `OK`
+- CLI accepts `/new <goal>` and runs plan
+- Screenshot saved to `data/screenshots`
 
 How to interpret failures:
 
 - `OPENAI_API_KEY is not set`: missing `.env`
 - `Planner failed`: key invalid, model not available, or OpenAI request failed
 - `Navigate failed`: Playwright missing dependencies or Chromium not installed
-- `Connection refused`: API or worker not running / ports blocked
+- `Connection refused`: Playwright could not launch (missing deps)
 
 > If you are using Codex to validate, ask it to run the commands above and report PASS/FAIL with errors and fixes.
 
 ## Troubleshooting
 
 - **Missing API key**: set `OPENAI_API_KEY` in `.env`
-- **Port in use**: stop the process using ports `3000`, `8000`, or `8001`
-- **Node/Python mismatch**: use Node 20 and Python 3.11 (matching Dockerfiles)
-- **Playwright dependency errors**: run `python -m playwright install --with-deps chromium` inside the worker container or locally
-- **Screenshots not saved**: verify `./data/screenshots` exists and is mounted into the worker container
+- **Port in use**: not applicable (CLI-only)
+- **Node/Python mismatch**: use Python 3.11
+- **Playwright dependency errors**: run `python -m playwright install chromium`
+- **Screenshots not saved**: verify `./data/screenshots` exists and is writable
