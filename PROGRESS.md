@@ -42,3 +42,11 @@ Milestones (R3.2 Google hardening):
 - [x] R3.2-M3: ranking improvements
 - [x] R3.2-M4: discovery benchmarks + CLI hook
 - [x] R3.2-M5: docs updates
+
+Milestones (UX release):
+
+- [x] UX-M1: terminal presence banner + prompt + log categories
+- [x] UX-M2: first run wizard
+- [x] UX-M3: README human setup guide
+- [x] UX-M4: smoke test + human testing doc
+- [ ] UX-M5: fix blockers found

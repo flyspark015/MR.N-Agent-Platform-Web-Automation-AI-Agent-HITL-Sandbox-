@@ -24,9 +24,44 @@ Local, single-user AI web automation agent that runs on localhost. No accounts, 
   - `./data/run_<id>/result.json`
   - `./data/run_<id>/artifacts/{csv,downloads,research}`
 
-**Text diagram**
+## Human Test (Fresh Machine Setup)
 
-User ? CLI ? Snapshot ? Decide ? Act ? Verify ? Recover ? Critic ? Repeat ? Results
+### Requirements
+
+- Python 3.12+ recommended (3.11+ ok)
+- Playwright Chromium
+- OpenAI API key
+
+### Windows PowerShell Setup
+
+```
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements.txt
+python -m playwright install chromium
+python -m apps.cli.main
+```
+
+### macOS/Linux Setup
+
+```
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m playwright install chromium
+python -m apps.cli.main
+```
+
+### Smoke Test
+
+```
+python scripts/smoke_test.py
+```
+
+Expected:
+- `discover_sources` returns >=3 non-Google URLs
+- Playwright opens `example.com` and title contains ?Example?
+- Report written to `data/smoke/smoke_<ts>.json`
 
 ## Source Discovery Reliability (R3.2)
 
@@ -50,16 +85,6 @@ Or in the CLI:
 
 Target success rate: >= 80% goals with >= 4 unique non-Google domains.
 
-## Capabilities (Phase 2 Loop)
-
-- Sense/decide/act loop with snapshots
-- Google search + open result actions
-- Safe action selection with takeover rules
-- Screenshot saved on each loop iteration
-- Result JSON saved per run
-- Table extraction and download detection
-- Research summarizer (multi-page)
-
 ## Takeover Rules (Required)
 
 The agent pauses and requests manual takeover for:
@@ -72,69 +97,6 @@ The agent pauses and requests manual takeover for:
 - Account setting changes
 
 The agent does **not** attempt to bypass CAPTCHA/OTP.
-
-## Getting Started
-
-### Prerequisites
-
-- Python 3.11 recommended
-- OpenAI API key
-
-### First Run / Setup
-
-**Current behavior**: this project reads the API key from `.env`. It does **not** prompt you yet.
-
-1. Copy `.env.example` to `.env`
-2. Set the key:
-
-```
-OPENAI_API_KEY=your_key_here
-```
-
-**Key storage**: `.env` file in the repo root.
-
-**Reset**: delete `.env` or clear `OPENAI_API_KEY` and re-run.
-
-### Setup
-
-```
-python -m venv .venv
-```
-
-Activate:
-
-```
-# Windows
-.\.venv\Scripts\activate
-
-# macOS/Linux
-source .venv/bin/activate
-```
-
-Install:
-
-```
-pip install -r requirements.txt
-python -m playwright install chromium
-```
-
-Run:
-
-```
-python -m apps.cli.main
-```
-
-Test goals:
-
-- `Open https://example.com and tell me the page title`
-- `Search Google for OpenAI official site and open it`
-- `Search Google for cats and extract top 3 result titles + URLs`
-
-Expected result:
-
-- Screenshot paths printed in logs
-- Files saved under `./data/run_<id>/screenshots/...`
-- Result saved to `./data/run_<id>/result.json`
 
 ## Action Types (Tool Boundary)
 
@@ -155,29 +117,8 @@ Allowed action types from the model:
 - `done`
 - `takeover`
 
-## Local Tests
-
-Schema validation:
-
-```
-python -c "from agent.actions import Action; Action.model_json_schema(); print('OK')"
-```
-
-Storage paths:
-
-```
-python -c "from storage.fs import ensure_run_dirs; ensure_run_dirs('test'); print('OK')"
-```
-
-## Limitations
-
-- Web content is untrusted; actions are conservative
-- Takeover required for login/OTP/CAPTCHA/payments/sending/deleting
-- No stealth or bypass techniques
-
 ## Troubleshooting
 
 - **Missing API key**: set `OPENAI_API_KEY` in `.env`
-- **Node/Python mismatch**: use Python 3.11
 - **Playwright dependency errors**: run `python -m playwright install chromium`
 - **Screenshots not saved**: verify `./data/run_<id>/screenshots` exists and is writable
