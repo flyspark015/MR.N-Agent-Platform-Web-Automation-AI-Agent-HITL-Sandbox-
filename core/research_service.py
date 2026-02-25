@@ -11,10 +11,7 @@ from skills.google_extract import search_google
 from skills.research.source_scoring import score_source
 from skills.research.extract import extract_structured
 from skills.research.synthesis import synthesize
-from browser.session import BrowserSession
-from browser.perceive import get_snapshot
-from browser.tools import execute_action
-from agent.actions import Action
+# browser session/tools not used in this module
 
 CACHE_DIR = Path("data/intelligence_cache")
 
@@ -37,8 +34,8 @@ async def discover_sources(goal: str, max_results: int = 10, min_domains: int = 
             f"{goal} official",
             f"{goal} documentation",
             f"{goal} manufacturer",
-            f\"{goal} site:.gov\",
-            f\"{goal} site:.edu\",
+            f"{goal} site:.gov",
+            f"{goal} site:.edu",
         ]
         for q in refinements:
             results = await search_google(q, max_results=5)
