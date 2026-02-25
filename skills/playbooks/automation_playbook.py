@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from core.research_service import generate_context
 from agent.actions import Action
 from browser.perceive import get_snapshot
 from browser.tools import execute_action
@@ -10,6 +11,11 @@ class AutomationPlaybook:
         return None
 
     async def execute(self, runtime, state) -> None:
+        context = await generate_context(state.goal)
+        context_path = run_dir(runtime.config.task_id) / "pre_automation_context.json"
+        context_path.write_text(str(context), encoding="utf-8")
+        state.artifacts_collected.append(str(context_path))
+
         page = runtime.session.page
         if "http" in state.goal:
             await execute_action(Action(type="navigate", url=state.goal, reason="navigate"), page, runtime.config.task_id, {"goal": state.goal})
@@ -18,11 +24,6 @@ class AutomationPlaybook:
             await execute_action(Action(type="open_result", input_text="0", reason="open top result"), page, runtime.config.task_id, {"goal": state.goal})
 
         snap = await get_snapshot(page, runtime.config.task_id, 1, 0)
-        runtime.emit(
-            "SNAPSHOT",
-            f"{snap.url} | {snap.title} | screenshot={snap.screenshot_path}",
-            {"url": snap.url, "title": snap.title, "screenshot_path": snap.screenshot_path},
-        )
         state.sources_visited.append(snap.url)
 
         proof_path = run_dir(runtime.config.task_id) / "automation_proof.txt"

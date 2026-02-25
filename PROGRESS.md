@@ -23,7 +23,7 @@ Milestones (Research core integration):
 - [x] R3-M1: research service layer
 - [x] R3-M2: supplier playbook integration
 - [x] R3-M3: data scraping integration
-- [ ] R3-M4: automation integration
+- [x] R3-M4: automation integration
 - [ ] R3-M5: intelligence cache
 - [ ] R3-M6: CLI commands
 - [ ] R3-M7: playbook decision upgrade
