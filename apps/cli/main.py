@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import queue
 import threading
 import time
@@ -28,6 +29,7 @@ HELP_TEXT = """Commands:
   /research <goal>
   /sources <goal>
   /intelligence <goal>
+  /bench discovery
   /help
   exit
 """
@@ -150,6 +152,12 @@ def main() -> None:
             if command.startswith("/intelligence "):
                 goal = command.replace("/intelligence ", "", 1).strip()
                 console.print(asyncio.run(cmd_intelligence(goal)))
+                continue
+
+            if command == "/bench discovery":
+                import asyncio as _asyncio
+                from benchmarks.discovery_suite import run_suite
+                _asyncio.run(run_suite())
                 continue
 
             if command == "/retry":
