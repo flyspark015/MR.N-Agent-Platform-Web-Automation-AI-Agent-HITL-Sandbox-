@@ -16,4 +16,4 @@ Milestones (Research v2):
 - [x] R2-M4: structured extraction v2
 - [x] R2-M5: synthesis engine
 - [x] R2-M6: coverage critic upgrade
-- [ ] R2-M7: report generator v2
+- [x] R2-M7: report generator v2
