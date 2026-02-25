@@ -42,6 +42,18 @@ python -m playwright install chromium
 python -m apps.cli.main
 ```
 
+### Windows: Run MR.N by typing `mrn`
+
+```
+.\scripts\install_windows.ps1
+```
+
+Open a new PowerShell window and run:
+
+```
+mrn
+```
+
 ### macOS/Linux Setup
 
 ```

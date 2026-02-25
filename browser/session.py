@@ -3,8 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from playwright.async_api import async_playwright
-
 from storage.fs import traces_dir
 
 class BrowserSession:
@@ -18,6 +16,7 @@ class BrowserSession:
         self.page = None
 
     async def start(self) -> None:
+        from playwright.async_api import async_playwright
         self._playwright = await async_playwright().start()
         self._browser = await self._playwright.chromium.launch(headless=self.headless)
         self._context = await self._browser.new_context()

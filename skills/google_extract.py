@@ -4,9 +4,6 @@ from dataclasses import dataclass
 from typing import List
 from urllib.parse import parse_qs, urlparse
 
-import httpx
-from lxml import html
-
 GOOGLE_URL = "https://www.google.com/search"
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0 Safari/537.36"
 
@@ -117,6 +114,8 @@ def _extract_strategy_fallback(text: str) -> List[GoogleResult]:
 
 
 def extract_google_results(html_text: str, max_results: int = 10) -> List[GoogleResult]:
+    from lxml import html
+
     tree = html.fromstring(html_text)
     if _detect_consent(tree):
         return []
@@ -127,7 +126,6 @@ def extract_google_results(html_text: str, max_results: int = 10) -> List[Google
     if not results:
         results = _extract_strategy_fallback(tree.text_content())
 
-    # Filter ads/sponsored blocks by presence of "Ad" label near the block
     filtered: List[GoogleResult] = []
     for item in results:
         if item.url in [r.url for r in filtered]:
@@ -139,6 +137,8 @@ def extract_google_results(html_text: str, max_results: int = 10) -> List[Google
 
 
 async def search_google(query: str, max_results: int = 10) -> List[GoogleResult]:
+    import httpx
+
     params = {"q": query, "hl": "en", "gl": "us", "num": max_results}
     headers = {"User-Agent": USER_AGENT}
     async with httpx.AsyncClient(timeout=20, headers=headers) as client:

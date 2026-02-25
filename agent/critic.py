@@ -5,6 +5,14 @@ from typing import List, Dict
 from skills.research.source_scoring import SourceScore
 
 
+def evaluate(state=None, context=None, artifacts=None, **kwargs) -> Dict[str, object]:
+    """Backward-compatible evaluate entrypoint.
+
+    Returns a minimal evaluation payload to keep legacy imports stable.
+    """
+    return {"goal_met": False, "missing_info": [], "next_step": ""}
+
+
 def evaluate_research_coverage(
     domains: List[str],
     extractions: List[Dict[str, object]],

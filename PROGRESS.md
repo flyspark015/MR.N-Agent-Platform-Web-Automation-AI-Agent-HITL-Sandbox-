@@ -1,5 +1,8 @@
 # Progress
 
+Hotfixes:
+- 2026-02-25: Restored agent.critic.evaluate entrypoint and import stability.
+
 Milestones (Playbooks):
 
 - [x] P1: playbook engine

@@ -4,8 +4,11 @@ import json
 import os
 from typing import List
 
-from dotenv import load_dotenv
-from openai import OpenAI
+try:
+    from dotenv import load_dotenv
+except Exception:  # pragma: no cover
+    def load_dotenv():
+        return None
 
 from agent.actions import Action, Snapshot
 
@@ -24,6 +27,8 @@ async def decide_action(goal: str, snapshot: Snapshot, history: List[Action]) ->
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY is not set")
+
+    from openai import OpenAI
 
     client = OpenAI(api_key=api_key)
 
