@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Dict, List
+from urllib.parse import urlparse
 
 from core.intelligence_cache import get_cache, set_cache
 from skills.research.query_engine import generate_query_variants
@@ -17,7 +18,7 @@ from agent.actions import Action
 
 CACHE_DIR = Path("data/intelligence_cache")
 
-async def discover_sources(goal: str, max_results: int = 10) -> List[str]:
+async def discover_sources(goal: str, max_results: int = 10, min_domains: int = 4) -> List[str]:
     cached = get_cache(f"discover_{goal}")
     if cached:
         return cached.get("urls", [])
@@ -26,12 +27,39 @@ async def discover_sources(goal: str, max_results: int = 10) -> List[str]:
     for q in queries:
         results = await search_google(q["query"], max_results=5)
         for r in results:
-            if r not in urls:
-                urls.append(r)
+            if r.url not in urls:
+                urls.append(r.url)
         if len(urls) >= max_results:
             break
+
+    if len(urls) < 5:
+        refinements = [
+            f"{goal} official",
+            f"{goal} documentation",
+            f"{goal} manufacturer",
+            f\"{goal} site:.gov\",
+            f\"{goal} site:.edu\",
+        ]
+        for q in refinements:
+            results = await search_google(q, max_results=5)
+            for r in results:
+                if r.url not in urls:
+                    urls.append(r.url)
+            if len(urls) >= max_results:
+                break
+
     ranked = await rank_sites(urls)
     final = [r["url"] for r in ranked][:max_results]
+
+    # enforce domain diversity
+    if len({urlparse(u).netloc for u in final}) < min_domains:
+        extra = [r["url"] for r in ranked][max_results:]
+        for u in extra:
+            if u not in final:
+                final.append(u)
+            if len({urlparse(x).netloc for x in final}) >= min_domains:
+                break
+
     set_cache(f"discover_{goal}", {"urls": final})
     return final
 

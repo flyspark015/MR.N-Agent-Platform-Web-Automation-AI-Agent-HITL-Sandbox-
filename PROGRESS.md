@@ -38,7 +38,7 @@ Milestones (R3.1 Stabilization):
 Milestones (R3.2 Google hardening):
 
 - [x] R3.2-M1: google extraction hardening
-- [ ] R3.2-M2: failsafe discovery pipeline
+- [x] R3.2-M2: failsafe discovery pipeline
 - [ ] R3.2-M3: ranking improvements
 - [ ] R3.2-M4: discovery benchmarks + CLI hook
 - [ ] R3.2-M5: docs updates
