@@ -1,6 +1,15 @@
 # Roadmap
 
-- Phase 2: Universal browser control loop + Google search (done)
-- Phase 3: Extraction schemas and richer results
-- Phase 4: Advanced reliability + recovery
-- Phase 5: UI polish + command improvements
+- M1: architecture refactor
+- M2: table extractor
+- M3: download manager
+- M4: research summarizer
+- M5: critic engine
+- M6: clickable discovery + modal handler
+- M7: session manager
+- M8: tier-3 scaffolding
+
+Future:
+- Memory-backed selectors per domain
+- Advanced multi-agent routing
+- Benchmark suite expansion

@@ -9,30 +9,34 @@ Local, single-user AI web automation agent that runs on localhost. No accounts, 
 - Uses user-provided `OPENAI_API_KEY`
 - No accounts, no multi-user, no RBAC, no cloud infrastructure
 
-## Architecture (Phase 2: Sense ? Decide ? Act)
+## Architecture (MR.N v2)
 
-- **CLI**: Rich-based TUI (`apps/cli`) for goals, progress, and logs
-- **Agent**: Decision loop + safety policies (`agent/`)
-- **Browser**: Playwright Chromium (`browser/`)
-- **Storage**: Local filesystem (`storage/`)
-- **Logs**: Structured logs + optional JSONL (`logs/`)
+- **Core runtime**: lifecycle, budgets, timeouts (`core/`)
+- **Agent**: planner, decide, verifier, recovery, critic (`agent/`)
+- **Browser**: session manager, perception, selectors, tools (`browser/`)
+- **Skills**: tables, downloads, research (`skills/`)
+- **Storage**: run artifacts (`storage/`)
+- **Logs**: structured logs + JSONL (`logs/`)
 - **Local storage**:
-  - `./data/screenshots` (current)
-  - `./data/results` (current)
-  - `./data/traces` (optional)
-  - `./data/logs` (optional)
+  - `./data/run_<id>/screenshots`
+  - `./data/run_<id>/traces`
+  - `./data/run_<id>/logs.jsonl`
+  - `./data/run_<id>/result.json`
+  - `./data/run_<id>/artifacts/{csv,downloads,research}`
 
 **Text diagram**
 
-User ? CLI ? Snapshot ? Decide ? Act ? Verify ? Repeat ? Results
+User ? CLI ? Snapshot ? Decide ? Act ? Verify ? Recover ? Critic ? Repeat ? Results
 
-## Phase 2 Capability (What Works Today)
+## Capabilities (Phase 2 Loop)
 
 - Sense/decide/act loop with snapshots
-- Google search action (`google_search`)
+- Google search + open result actions
 - Safe action selection with takeover rules
 - Screenshot saved on each loop iteration
-- Result JSON saved to `data/results`
+- Result JSON saved per run
+- Table extraction and download detection
+- Research summarizer (multi-page)
 
 ## Takeover Rules (Required)
 
@@ -46,12 +50,6 @@ The agent pauses and requests manual takeover for:
 - Account setting changes
 
 The agent does **not** attempt to bypass CAPTCHA/OTP.
-
-## Features
-
-- Local decision loop with safe actions
-- Playwright navigation + screenshots
-- CLI/TUI with live actions and logs
 
 ## Getting Started
 
@@ -113,24 +111,31 @@ Test goals:
 Expected result:
 
 - Screenshot paths printed in logs
-- Files saved to `./data/screenshots/...`
-- Result saved to `./data/results/{task_id}.json`
+- Files saved under `./data/run_<id>/screenshots/...`
+- Result saved to `./data/run_<id>/result.json`
 
-## Localhost Test
+## Action Types (Tool Boundary)
 
-### Quick Start (Minimal)
+Allowed action types from the model:
 
-```
-python -m venv .venv
-.\.venv\Scripts\activate
-pip install -r requirements.txt
-python -m playwright install chromium
-python -m apps.cli.main
-```
+- `navigate`
+- `google_search`
+- `open_result`
+- `click`
+- `type`
+- `scroll`
+- `wait`
+- `back`
+- `extract`
+- `extract_table`
+- `download`
+- `summarize`
+- `done`
+- `takeover`
 
-### Full Local Tests (Manual)
+## Local Tests
 
-Planner schema validation:
+Schema validation:
 
 ```
 python -c "from agent.actions import Action; Action.model_json_schema(); print('OK')"
@@ -139,28 +144,8 @@ python -c "from agent.actions import Action; Action.model_json_schema(); print('
 Storage paths:
 
 ```
-python -c "from storage.files import ensure_dirs; ensure_dirs(); print('OK')"
+python -c "from storage.fs import ensure_run_dirs; ensure_run_dirs('test'); print('OK')"
 ```
-
-Run the CLI:
-
-```
-python -m apps.cli.main
-```
-
-Expected results:
-
-- Schema prints `OK`
-- Storage setup prints `OK`
-- CLI accepts `/new <goal>` and runs the loop
-- Screenshots saved to `data/screenshots`
-
-How to interpret failures:
-
-- `OPENAI_API_KEY is not set`: missing `.env`
-- `Planner failed`: key invalid or OpenAI request failed
-- `Navigate failed`: Playwright missing dependencies or Chromium not installed
-- `Connection refused`: Playwright could not launch (missing deps)
 
 ## Limitations
 
@@ -171,7 +156,6 @@ How to interpret failures:
 ## Troubleshooting
 
 - **Missing API key**: set `OPENAI_API_KEY` in `.env`
-- **Port in use**: not applicable (CLI-only)
 - **Node/Python mismatch**: use Python 3.11
 - **Playwright dependency errors**: run `python -m playwright install chromium`
-- **Screenshots not saved**: verify `./data/screenshots` exists and is writable
+- **Screenshots not saved**: verify `./data/run_<id>/screenshots` exists and is writable
