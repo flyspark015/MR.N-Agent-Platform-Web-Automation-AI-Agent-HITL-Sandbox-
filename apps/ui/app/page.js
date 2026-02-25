@@ -8,13 +8,13 @@ export default function Home() {
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
 
-  const runPlan = async () => {
+  const runTask = async () => {
     if (!task.trim()) return;
     setStatus("loading");
     setError("");
     setPlan(null);
     try {
-      const res = await fetch("http://localhost:8000/plan", {
+      const res = await fetch("http://localhost:8000/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ task })
@@ -40,13 +40,13 @@ export default function Home() {
         <div className="input-row">
           <input
             type="text"
-            placeholder="Find price of DJI Mini 4 Pro"
+            placeholder="Open https://example.com"
             aria-label="Task"
             value={task}
             onChange={(event) => setTask(event.target.value)}
           />
-          <button onClick={runPlan} disabled={status === "loading"}>
-            {status === "loading" ? "Planning..." : "Run"}
+          <button onClick={runTask} disabled={status === "loading"}>
+            {status === "loading" ? "Running..." : "Run"}
           </button>
         </div>
         {error ? <div className="error">{error}</div> : null}
@@ -58,8 +58,25 @@ export default function Home() {
             <ol>
               {plan.steps.map((step) => (
                 <li key={step.id}>
-                  <span className="step-type">{step.type}</span>
-                  <span className="step-desc">{step.description}</span>
+                  <div>
+                    <span className="step-type">{step.type}</span>
+                    <span className="step-desc">{step.description}</span>
+                  </div>
+                  <div className={`step-status status-${step.status.toLowerCase()}`}>
+                    {step.status}
+                  </div>
+                  {step.result?.screenshot_url ? (
+                    <div className="result-block">
+                      <img
+                        src={`http://localhost:8000${step.result.screenshot_url}`}
+                        alt="Step screenshot"
+                      />
+                      <div className="result-meta">
+                        <div><strong>Title:</strong> {step.result.title}</div>
+                        <div><strong>Final URL:</strong> {step.result.final_url}</div>
+                      </div>
+                    </div>
+                  ) : null}
                 </li>
               ))}
             </ol>

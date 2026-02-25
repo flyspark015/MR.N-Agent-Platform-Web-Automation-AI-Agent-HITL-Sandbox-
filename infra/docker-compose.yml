@@ -7,6 +7,9 @@ services:
       - "8000:8000"
     volumes:
       - ../apps/api:/app
+      - ../data:/data
+    environment:
+      - WORKER_URL=http://worker:8001
   worker:
     build: ../apps/worker
     env_file: ../.env
