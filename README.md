@@ -9,10 +9,10 @@ Local, single-user AI web automation agent that runs on localhost. No accounts, 
 - Uses user-provided `OPENAI_API_KEY`
 - No accounts, no multi-user, no RBAC, no cloud infrastructure
 
-## Architecture (Phase 3+ CLI)
+## Architecture (Phase 2: Sense ? Decide ? Act)
 
 - **CLI**: Rich-based TUI (`apps/cli`) for goals, progress, and logs
-- **Agent**: Planner + executor (`agent/`)
+- **Agent**: Decision loop + safety policies (`agent/`)
 - **Browser**: Playwright Chromium (`browser/`)
 - **Storage**: Local filesystem (`storage/`)
 - **Logs**: Structured logs + optional JSONL (`logs/`)
@@ -24,25 +24,34 @@ Local, single-user AI web automation agent that runs on localhost. No accounts, 
 
 **Text diagram**
 
-User ? CLI ? Planner ? Executor ? Playwright ? Screenshot/Results ? CLI
+User ? CLI ? Snapshot ? Decide ? Act ? Verify ? Repeat ? Results
 
-## Phase 3 Capability (What Works Today)
+## Phase 2 Capability (What Works Today)
 
-- Planner creates a `NAVIGATE` step
-- Worker launches Chromium (headed by default)
-- Navigates to URL
-- Captures screenshot
-- Returns:
-  - final URL
-  - page title
-  - status
-- CLI displays screenshot path + metadata
+- Sense/decide/act loop with snapshots
+- Google search action (`google_search`)
+- Safe action selection with takeover rules
+- Screenshot saved on each loop iteration
+- Result JSON saved to `data/results`
+
+## Takeover Rules (Required)
+
+The agent pauses and requests manual takeover for:
+
+- Login flows
+- OTP / CAPTCHA
+- Payments
+- Sending messages/emails
+- Delete/cancel actions
+- Account setting changes
+
+The agent does **not** attempt to bypass CAPTCHA/OTP.
 
 ## Features
 
-- Local planning endpoint (OpenAI via `OPENAI_API_KEY`)
-- Playwright navigation + screenshot capture
-- CLI/TUI with live steps and logs
+- Local decision loop with safe actions
+- Playwright navigation + screenshots
+- CLI/TUI with live actions and logs
 
 ## Getting Started
 
@@ -65,8 +74,6 @@ OPENAI_API_KEY=your_key_here
 **Key storage**: `.env` file in the repo root.
 
 **Reset**: delete `.env` or clear `OPENAI_API_KEY` and re-run.
-
-> Note: When a CLI prompt is added in a future phase, it should only ask once and store the key so it is not requested again unless the key is removed.
 
 ### Setup
 
@@ -97,30 +104,17 @@ Run:
 python -m apps.cli.main
 ```
 
-Test goal:
+Test goals:
 
-```
-Open https://example.com and tell me the page title
-```
+- `Open https://example.com and tell me the page title`
+- `Search Google for OpenAI official site and open it`
+- `Search Google for cats and extract top 3 result titles + URLs`
 
 Expected result:
 
-- Screenshot path printed in logs
-- File saved to `./data/screenshots/{task_id}_step_1.png`
+- Screenshot paths printed in logs
+- Files saved to `./data/screenshots/...`
 - Result saved to `./data/results/{task_id}.json`
-- CLI shows final URL and title
-
-## Current Capabilities
-
-- `NAVIGATE` and `EXTRACT` work end-to-end
-- Screenshots saved per step
-- Results saved to `data/results`
-
-## Next Phase
-
-- Click/Type reliability
-- Extraction schemas
-- TUI polish + command improvements
 
 ## Localhost Test
 
@@ -139,7 +133,7 @@ python -m apps.cli.main
 Planner schema validation:
 
 ```
-python -c "from agent.models import Plan; Plan.model_json_schema(); print('OK')"
+python -c "from agent.actions import Action; Action.model_json_schema(); print('OK')"
 ```
 
 Storage paths:
@@ -156,19 +150,23 @@ python -m apps.cli.main
 
 Expected results:
 
-- Planner schema prints `OK`
+- Schema prints `OK`
 - Storage setup prints `OK`
-- CLI accepts `/new <goal>` and runs plan
-- Screenshot saved to `data/screenshots`
+- CLI accepts `/new <goal>` and runs the loop
+- Screenshots saved to `data/screenshots`
 
 How to interpret failures:
 
 - `OPENAI_API_KEY is not set`: missing `.env`
-- `Planner failed`: key invalid, model not available, or OpenAI request failed
+- `Planner failed`: key invalid or OpenAI request failed
 - `Navigate failed`: Playwright missing dependencies or Chromium not installed
 - `Connection refused`: Playwright could not launch (missing deps)
 
-> If you are using Codex to validate, ask it to run the commands above and report PASS/FAIL with errors and fixes.
+## Limitations
+
+- Web content is untrusted; actions are conservative
+- Takeover required for login/OTP/CAPTCHA/payments/sending/deleting
+- No stealth or bypass techniques
 
 ## Troubleshooting
 

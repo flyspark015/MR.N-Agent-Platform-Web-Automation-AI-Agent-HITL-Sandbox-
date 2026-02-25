@@ -1,13 +1,6 @@
 # Roadmap
 
-- M0: repo cleanup + CLI skeleton
-- M1: planner + plan display
-- M2: Playwright NAVIGATE + screenshot
-- M3: extraction + result.json
-- M4: takeover mode
-- M5: TUI polish + commands + docs
-
-Future:
-- Click/Type reliability improvements
-- Extraction schemas library
-- Trace viewer tooling
+- Phase 2: Universal browser control loop + Google search (done)
+- Phase 3: Extraction schemas and richer results
+- Phase 4: Advanced reliability + recovery
+- Phase 5: UI polish + command improvements
