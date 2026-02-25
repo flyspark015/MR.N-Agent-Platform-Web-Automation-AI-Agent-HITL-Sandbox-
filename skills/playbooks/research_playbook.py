@@ -1,56 +1,60 @@
 from __future__ import annotations
 
-import json
-from typing import List
+from typing import List, Set
+from urllib.parse import urlparse
 
 from agent.actions import Action
 from browser.perceive import get_snapshot
 from browser.tools import execute_action
-from skills.research import summarize
-from storage.fs import run_dir
+from skills.research.query_engine import generate_query_variants
 
 class ResearchPlaybook:
-    def __init__(self, top_n: int = 5) -> None:
+    def __init__(self, top_n: int = 3, min_domains: int = 4, max_query_budget: int = 6) -> None:
         self.top_n = top_n
+        self.min_domains = min_domains
+        self.max_query_budget = max_query_budget
         self.sources: List[dict] = []
+        self.domains: Set[str] = set()
 
     def plan(self, goal: str) -> None:
         return None
 
     async def execute(self, runtime, state) -> None:
-        page = runtime.session.page
-        await execute_action(
-            Action(type="google_search", query=state.goal, reason="research search"),
-            page,
-            runtime.config.task_id,
-            {"goal": state.goal},
-        )
+        queries = await generate_query_variants(state.goal)
+        used = 0
 
-        for i in range(self.top_n):
+        for item in queries:
+            if used >= self.max_query_budget:
+                break
+            used += 1
+
             await execute_action(
-                Action(type="open_result", input_text=str(i), reason="open result"),
-                page,
+                Action(type="google_search", query=item["query"], reason="research search"),
+                runtime.session.page,
                 runtime.config.task_id,
                 {"goal": state.goal},
             )
-            snap = await get_snapshot(page, runtime.config.task_id, i + 1, 0)
-            runtime.emit(
-                "SNAPSHOT",
-                f"{snap.url} | {snap.title} | screenshot={snap.screenshot_path}",
-                {"url": snap.url, "title": snap.title, "screenshot_path": snap.screenshot_path},
-            )
-            self.sources.append({"url": snap.url, "title": snap.title, "text": snap.visible_text_summary})
-            state.sources_visited.append(snap.url)
 
-        summary = await summarize(runtime.config.task_id, state.goal, self.sources)
-        report_path = run_dir(runtime.config.task_id) / "report.md"
-        report_path.write_text(
-            "# Research Report\n\n" + "\n".join(summary.get("key_points", [])),
-            encoding="utf-8",
-        )
-        sources_path = run_dir(runtime.config.task_id) / "sources.json"
-        sources_path.write_text(json.dumps(self.sources, indent=2), encoding="utf-8")
-        state.artifacts_collected.extend([str(report_path), str(sources_path)])
+            for i in range(self.top_n):
+                await execute_action(
+                    Action(type="open_result", input_text=str(i), reason="open result"),
+                    runtime.session.page,
+                    runtime.config.task_id,
+                    {"goal": state.goal},
+                )
+                snap = await get_snapshot(runtime.session.page, runtime.config.task_id, i + 1, used)
+                domain = urlparse(snap.url).netloc
+                self.domains.add(domain)
+                self.sources.append({"url": snap.url, "title": snap.title, "text": snap.visible_text_summary})
+                state.sources_visited.append(snap.url)
+                runtime.emit(
+                    "SNAPSHOT",
+                    f"{snap.url} | {snap.title} | screenshot={snap.screenshot_path}",
+                    {"url": snap.url, "title": snap.title, "screenshot_path": snap.screenshot_path},
+                )
+
+            if len(self.domains) >= self.min_domains:
+                break
 
     async def evaluate(self, critic) -> dict:
         return critic
