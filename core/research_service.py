@@ -6,6 +6,7 @@ from typing import Dict, List
 
 from core.intelligence_cache import get_cache, set_cache
 from skills.research.query_engine import generate_query_variants
+from skills.google_extract import search_google
 from skills.research.source_scoring import score_source
 from skills.research.extract import extract_structured
 from skills.research.synthesis import synthesize
@@ -23,9 +24,16 @@ async def discover_sources(goal: str, max_results: int = 10) -> List[str]:
     queries = await generate_query_variants(goal)
     urls: List[str] = []
     for q in queries:
-        urls.append(f"https://www.google.com/search?q={q['query'].replace(' ', '+')}")
-    set_cache(f"discover_{goal}", {"urls": urls[:max_results]})
-    return urls[:max_results]
+        results = await search_google(q["query"], max_results=5)
+        for r in results:
+            if r not in urls:
+                urls.append(r)
+        if len(urls) >= max_results:
+            break
+    ranked = await rank_sites(urls)
+    final = [r["url"] for r in ranked][:max_results]
+    set_cache(f"discover_{goal}", {"urls": final})
+    return final
 
 async def generate_context(goal: str) -> Dict[str, object]:
     cached = get_cache(f"context_{goal}")
