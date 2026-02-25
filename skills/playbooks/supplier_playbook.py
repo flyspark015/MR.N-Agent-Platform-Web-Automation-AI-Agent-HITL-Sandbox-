@@ -6,6 +6,7 @@ from typing import List
 
 import pandas as pd
 
+from core.research_service import discover_sources, rank_sites
 from agent.actions import Action
 from browser.perceive import get_snapshot
 from browser.tools import execute_action
@@ -24,18 +25,12 @@ class SupplierPlaybook:
         return None
 
     async def execute(self, runtime, state) -> None:
-        page = runtime.session.page
-        query = f"{state.goal} supplier"
-        await execute_action(Action(type="google_search", query=query, reason="supplier search"), page, runtime.config.task_id, {"goal": state.goal})
+        sources = await discover_sources(state.goal)
+        ranked = await rank_sites(sources)
 
-        for i in range(self.top_n):
-            await execute_action(Action(type="open_result", input_text=str(i), reason="open result"), page, runtime.config.task_id, {"goal": state.goal})
-            snap = await get_snapshot(page, runtime.config.task_id, i + 1, 0)
-            runtime.emit(
-                "SNAPSHOT",
-                f"{snap.url} | {snap.title} | screenshot={snap.screenshot_path}",
-                {"url": snap.url, "title": snap.title, "screenshot_path": snap.screenshot_path},
-            )
+        for item in ranked[: self.top_n]:
+            await execute_action(Action(type="navigate", url=item["url"], reason="supplier source"), runtime.session.page, runtime.config.task_id, {"goal": state.goal})
+            snap = await get_snapshot(runtime.session.page, runtime.config.task_id, 1, 0)
             state.sources_visited.append(snap.url)
 
             emails = EMAIL_RE.findall(snap.visible_text_summary)
@@ -52,7 +47,7 @@ class SupplierPlaybook:
 
         df = pd.DataFrame(self.rows)
         csv_path = save_table_csv(runtime.config.task_id, "suppliers", df)
-        summary_path = run_dir(runtime.config.task_id) / "supplier_summary.json"
+        summary_path = run_dir(runtime.config.task_id) / "supplier_intelligence.json"
         summary_path.write_text(json.dumps(self.rows, indent=2), encoding="utf-8")
         state.artifacts_collected.extend([str(csv_path), str(summary_path)])
 

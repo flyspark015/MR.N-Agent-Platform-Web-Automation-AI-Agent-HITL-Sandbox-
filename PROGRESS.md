@@ -21,7 +21,7 @@ Milestones (Research v2):
 Milestones (Research core integration):
 
 - [x] R3-M1: research service layer
-- [ ] R3-M2: supplier playbook integration
+- [x] R3-M2: supplier playbook integration
 - [ ] R3-M3: data scraping integration
 - [ ] R3-M4: automation integration
 - [ ] R3-M5: intelligence cache
