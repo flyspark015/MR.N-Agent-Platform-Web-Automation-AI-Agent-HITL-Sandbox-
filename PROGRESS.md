@@ -33,4 +33,4 @@ Milestones (R3.1 Stabilization):
 - [x] R3.1-M1: google extraction engine
 - [x] R3.1-M2: discover_sources rewrite
 - [x] R3.1-M3: controller selector integration
-- [ ] R3.1-M4: verification tests
+- [x] R3.1-M4: verification tests
