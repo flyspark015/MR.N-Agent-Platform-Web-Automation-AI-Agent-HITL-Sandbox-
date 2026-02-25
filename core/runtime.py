@@ -27,6 +27,7 @@ class RuntimeConfig:
         max_actions: int = 40,
         step_timeout: int = 30,
         retry_limit: int = 1,
+        task_id: str | None = None,
     ) -> None:
         self.headless = headless
         self.trace = trace
@@ -34,9 +35,11 @@ class RuntimeConfig:
         self.max_actions = max_actions
         self.step_timeout = step_timeout
         self.retry_limit = retry_limit
+        self.task_id = task_id
 
 async def run_task(goal: str, config: RuntimeConfig, bus: Optional[EventBus] = None, task_id: Optional[str] = None) -> Dict[str, object]:
-    task_id = task_id or str(uuid.uuid4())
+    task_id = task_id or config.task_id or str(uuid.uuid4())
+    config.task_id = task_id
     logger = Logger(task_id, jsonl=config.jsonl)
     state = TaskState(task_id=task_id, goal=goal, status="RUNNING")
 
