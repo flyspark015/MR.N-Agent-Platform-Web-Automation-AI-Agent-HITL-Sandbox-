@@ -26,12 +26,14 @@ class RuntimeConfig:
         jsonl: bool = False,
         max_actions: int = 40,
         step_timeout: int = 30,
+        retry_limit: int = 1,
     ) -> None:
         self.headless = headless
         self.trace = trace
         self.jsonl = jsonl
         self.max_actions = max_actions
         self.step_timeout = step_timeout
+        self.retry_limit = retry_limit
 
 async def run_task(goal: str, config: RuntimeConfig, bus: Optional[EventBus] = None, task_id: Optional[str] = None) -> Dict[str, object]:
     task_id = task_id or str(uuid.uuid4())
@@ -95,10 +97,20 @@ async def run_task(goal: str, config: RuntimeConfig, bus: Optional[EventBus] = N
                 break
 
             try:
-                result = await asyncio.wait_for(
-                    execute_action(action, page, task_id, {"goal": goal, "pages": pages_for_research}),
-                    timeout=config.step_timeout,
-                )
+                attempt = 0
+                result = {}
+                while attempt <= config.retry_limit:
+                    try:
+                        result = await asyncio.wait_for(
+                            execute_action(action, page, task_id, {"goal": goal, "pages": pages_for_research}),
+                            timeout=config.step_timeout,
+                        )
+                        break
+                    except Exception as exc:
+                        attempt += 1
+                        emit("RETRY", f"Action retry {attempt}/{config.retry_limit}: {exc}")
+                        if attempt > config.retry_limit:
+                            raise
                 if action.type in ["navigate", "open_result", "click", "google_search"]:
                     pages_for_research.append(
                         {
