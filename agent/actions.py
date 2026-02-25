@@ -12,9 +12,13 @@ ActionType = Literal[
     "wait",
     "back",
     "extract",
+    "extract_table",
+    "download",
+    "summarize",
     "done",
     "takeover",
     "google_search",
+    "open_result",
 ]
 
 class VerifyRule(BaseModel):

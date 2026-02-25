@@ -12,7 +12,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from apps.cli.controller import AgentController
-from storage.files import result_path
+from storage.fs import result_path
 
 console = Console()
 

@@ -1,9 +1,6 @@
 /.venv
 **/__pycache__/
-/data/results
-/data/screenshots
-/data/traces
-/data/logs
+/data/run_*
 /.env
 /node_modules
 /.next

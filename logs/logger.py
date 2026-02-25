@@ -4,7 +4,7 @@ import time
 from dataclasses import dataclass
 from typing import List
 
-from storage.files import append_jsonl, log_path
+from storage.fs import append_jsonl, logs_path
 
 @dataclass
 class LogEntry:
@@ -17,7 +17,7 @@ class Logger:
         self.task_id = task_id
         self.jsonl = jsonl
         self.entries: List[LogEntry] = []
-        self._path = log_path(task_id) if jsonl else None
+        self._path = logs_path(task_id) if jsonl else None
 
     def log(self, tag: str, message: str) -> None:
         entry = LogEntry(time.time(), tag, message)
