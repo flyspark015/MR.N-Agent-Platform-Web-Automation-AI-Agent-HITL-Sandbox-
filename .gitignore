@@ -1,0 +1,7 @@
+/node_modules
+/.next
+/.env
+/data/results/*.json
+/data/screenshots
+/data/traces
+/repo.zip
