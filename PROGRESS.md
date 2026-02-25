@@ -17,3 +17,13 @@ Milestones (Research v2):
 - [x] R2-M5: synthesis engine
 - [x] R2-M6: coverage critic upgrade
 - [x] R2-M7: report generator v2
+
+Milestones (Research core integration):
+
+- [x] R3-M1: research service layer
+- [ ] R3-M2: supplier playbook integration
+- [ ] R3-M3: data scraping integration
+- [ ] R3-M4: automation integration
+- [ ] R3-M5: intelligence cache
+- [ ] R3-M6: CLI commands
+- [ ] R3-M7: playbook decision upgrade
