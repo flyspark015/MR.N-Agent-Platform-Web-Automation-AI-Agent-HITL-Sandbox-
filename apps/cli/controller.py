@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from agent.actions import ActionRecord
 from core.events import EventBus
-from core.playbook_runner import PlaybookRunner
+from core.playbook_selector import PlaybookSelector
 from core.runtime import RuntimeConfig
 from logs.logger import Logger
 
@@ -56,8 +56,8 @@ class AgentController:
             self.state.actions = []
 
         config = RuntimeConfig(headless=self.headless, trace=self.trace, jsonl=self.jsonl, task_id=task_id)
-        runner = PlaybookRunner()
-        state = asyncio_run(runner.run(goal, config, bus=bus))
+        selector = PlaybookSelector()
+        state = asyncio_run(selector.run(goal, config, bus=bus))
 
         with self.state.lock:
             self.state.status = state.completion_status
