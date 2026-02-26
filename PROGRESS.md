@@ -1,7 +1,8 @@
 # Progress
 
 Hotfixes:
-- 2026-02-25: Restored agent.critic.evaluate entrypoint and import stability.
+- 2026-02-26: Restored agent.critic.evaluate entrypoint and import stability.
+- 2026-02-26: Query schema fix for OpenAI response_format.
 
 Milestones (Playbooks):
 
@@ -53,3 +54,7 @@ Milestones (UX release):
 - [x] UX-M3: README human setup guide
 - [x] UX-M4: smoke test + human testing doc
 - [x] UX-M5: fix blockers found
+
+Milestones (R3.3 Bugfix):
+
+- [x] R3.3: OpenAI schema root fix + smoke test updates

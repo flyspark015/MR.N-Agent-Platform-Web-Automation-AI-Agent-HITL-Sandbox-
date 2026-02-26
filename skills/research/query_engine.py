@@ -13,16 +13,24 @@ except Exception:  # pragma: no cover
 load_dotenv()
 
 QUERY_SCHEMA = {
-    "type": "array",
-    "items": {
-        "type": "object",
-        "properties": {
-            "type": {"type": "string"},
-            "query": {"type": "string"},
-        },
-        "required": ["type", "query"],
-        "additionalProperties": False,
+    "type": "object",
+    "properties": {
+        "queries": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "type": {"type": "string"},
+                    "query": {"type": "string"},
+                },
+                "required": ["type", "query"],
+                "additionalProperties": False,
+            },
+            "minItems": 1,
+        }
     },
+    "required": ["queries"],
+    "additionalProperties": False,
 }
 
 SYSTEM = (
@@ -55,4 +63,4 @@ async def generate_query_variants(goal: str) -> List[dict]:
     )
 
     data = json.loads(response.output_text)
-    return data
+    return data["queries"]

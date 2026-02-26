@@ -1,28 +1,42 @@
 param(
-  [string]$InstallDir = "$env:USERPROFILE\bin"
+  [string] = "C:\Users\toy4y\bin"
 )
 
-$ErrorActionPreference = "Stop"
+Continue = "Stop"
 
-if (-not (Test-Path $InstallDir)) {
-  New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
-}
+try {
+  if (-not (Test-Path )) {
+    New-Item -ItemType Directory -Force -Path  | Out-Null
+  }
 
-if (-not (Test-Path ".venv")) {
-  python -m venv .venv
-}
+  if (-not (Test-Path ".venv")) {
+    python -m venv .venv
+  }
 
+  . .\.venv\Scripts\activate
+  pip install -r requirements.txt
+  python -m playwright install chromium
+
+   = @'
+param()
+Set-Location "\..\mrn"
 . .\.venv\Scripts\activate
-pip install -r requirements.txt
-python -m playwright install chromium
+python -m apps.cli.main
+'@
 
-$shim = Join-Path $InstallDir "mrn.ps1"
-$shimContent | Set-Content -Encoding ASCII $shim
+   = Join-Path  "mrn.ps1"
+   | Set-Content -Encoding ASCII 
 
-$path = [Environment]::GetEnvironmentVariable("PATH", "User")
-if ($path -notlike "*${InstallDir}*") {
-  [Environment]::SetEnvironmentVariable("PATH", "$path;$InstallDir", "User")
-  Write-Host "Added $InstallDir to PATH (User). Restart PowerShell to use 'mrn'."
+   = [Environment]::GetEnvironmentVariable("PATH", "User")
+  if ( -notlike "**") {
+    [Environment]::SetEnvironmentVariable("PATH", ";", "User")
+    Write-Host "Added  to PATH (User). Restart PowerShell to use 'mrn'."
+  }
+
+  Write-Host "Install complete. Open a new PowerShell window and run: mrn"
 }
-
-Write-Host "Install complete. Open a new PowerShell window and run: mrn"
+catch {
+  Write-Host "Install failed"
+  Write-Host 
+  exit 1
+}

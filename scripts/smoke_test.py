@@ -16,11 +16,17 @@ async def main():
         "playwright": {},
     }
 
-    urls = await discover_sources("OpenAI official site")
-    report["discover_sources"] = {
-        "urls": urls,
-        "ok": len(urls) >= 3 and all("google.com" not in u for u in urls),
-    }
+    try:
+        urls = await discover_sources("OpenAI official site")
+        report["discover_sources"] = {
+            "urls": urls,
+            "ok": len(urls) >= 3 and all("google.com" not in u for u in urls),
+        }
+    except Exception as exc:
+        report["discover_sources"] = {
+            "ok": False,
+            "error": str(exc),
+        }
 
     session = BrowserSession(headless=True, task_id="smoke")
     await session.start()
