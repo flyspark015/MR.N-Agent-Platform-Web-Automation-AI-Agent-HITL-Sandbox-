@@ -58,3 +58,10 @@ Milestones (UX release):
 Milestones (R3.3 Bugfix):
 
 - [x] R3.3: OpenAI schema root fix + smoke test updates
+
+Milestones (R3.4 Discovery reliability):
+
+- [x] R3.4-M1: provider abstraction + DDG fallback
+- [x] R3.4-M2: discover_sources provider chain + debug artifacts
+- [x] R3.4-M3: ranking improvements
+- [x] R3.4-M4: discovery benchmarks + CLI hook

@@ -25,7 +25,11 @@ class SupplierPlaybook:
         return None
 
     async def execute(self, runtime, state) -> None:
-        sources = await discover_sources(state.goal)
+        sources = await discover_sources(
+            state.goal,
+            task_id=runtime.config.task_id,
+            emit=runtime.emit,
+        )
         ranked = await rank_sites(sources)
 
         for item in ranked[: self.top_n]:

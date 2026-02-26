@@ -3,6 +3,7 @@
 /data/run_*
 /data/benchmarks
 /data/smoke
+/data
 /.env
 /node_modules
 /.next

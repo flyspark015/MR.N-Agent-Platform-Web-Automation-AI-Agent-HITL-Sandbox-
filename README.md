@@ -75,13 +75,15 @@ Expected:
 - Playwright opens `example.com` and title contains ?Example?
 - Report written to `data/smoke/smoke_<ts>.json`
 
-## Source Discovery Reliability (R3.2)
+## Source Discovery Reliability (R3.4)
 
-- Google extraction hardened with multi-strategy parsing
-- Organic results only (no ads, no Google properties)
+- Provider chain with fallbacks (Google best-effort + DuckDuckGo HTML)
+- Organic results only (no ads, no Google or DuckDuckGo properties)
 - Failsafe query refinements when results are thin
 - Ranked by credibility heuristics
-- Benchmarked with discovery suite
+- Debug artifacts saved on provider failure in `data/run_<id>/research/debug/`
+- Artifact: `<provider>_last_url.txt`
+- Artifact: `<provider>_html_snippet.txt`
 
 Run the discovery benchmark:
 

@@ -15,7 +15,19 @@ MAJOR_NEWS = {
     "apnews.com",
 }
 
-SPAM_DOMAINS = {"pinterest.com", "medium.com", "reddit.com"}
+SPAM_DOMAINS = {
+    "pinterest.com",
+    "medium.com",
+    "reddit.com",
+    "quora.com",
+    "facebook.com",
+    "linkedin.com",
+    "twitter.com",
+    "x.com",
+    "tiktok.com",
+    "instagram.com",
+    "youtube.com",
+}
 BONUS_KEYWORDS = ["official", "docs", "documentation", "pdf", "whitepaper", "download", "pricing"]
 
 @dataclass
