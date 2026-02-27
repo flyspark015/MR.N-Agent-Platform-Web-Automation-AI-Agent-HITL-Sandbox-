@@ -65,12 +65,16 @@ class GoogleHtmlProvider(SearchProvider):
         self.last_error = None
         params = {"q": query, "hl": "en", "gl": "us", "num": max_results}
         headers = {"User-Agent": USER_AGENT}
-        async with httpx.AsyncClient(timeout=20, headers=headers) as client:
+        async with httpx.AsyncClient(timeout=10, headers=headers, follow_redirects=True) as client:
             try:
                 resp = await client.get(GOOGLE_URL, params=params)
                 self.last_url = str(resp.request.url)
+                self.last_status = resp.status_code
                 resp.raise_for_status()
                 self.last_html_snippet = resp.text[:5000]
+                if "/sorry/" in str(resp.url):
+                    self.last_error = "blocked_sorry"
+                    return []
                 results = self._extract(resp.text)
                 if not results and self._detect_consent(resp.text):
                     self.last_error = "consent_or_blocked"

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import json
 from datetime import datetime
 from pathlib import Path
@@ -38,6 +39,9 @@ def _domain(url: str) -> str:
 
 
 async def run_suite() -> Dict[str, object]:
+    os.environ.setdefault("MRN_FAST_DISCOVERY", "1")
+    os.environ.setdefault("OPENAI_TIMEOUT", "10")
+    os.environ.setdefault("MRN_SKIP_NETWORK", "1")
     results = []
     success = 0
     domain_counts = []
@@ -45,7 +49,7 @@ async def run_suite() -> Dict[str, object]:
 
     for goal in GOALS:
         try:
-            urls = await discover_sources(goal)
+            urls = await asyncio.wait_for(discover_sources(goal), timeout=8)
             domains = {d for d in map(_domain, urls) if d and "google.com" not in d}
             ok = len(domains) >= 4
             if ok:

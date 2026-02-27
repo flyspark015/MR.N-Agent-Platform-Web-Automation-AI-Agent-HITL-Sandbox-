@@ -65,3 +65,8 @@ Milestones (R3.4 Discovery reliability):
 - [x] R3.4-M2: discover_sources provider chain + debug artifacts
 - [x] R3.4-M3: ranking improvements
 - [x] R3.4-M4: discovery benchmarks + CLI hook
+
+Self-test fixes (2026-02-27):
+- [x] Windows py313 deps: greenlet/playwright compatibility
+- [x] Discovery fallback heuristics + provider hardening
+- [x] Benchmark stability mode (fast discovery)

@@ -8,8 +8,8 @@ from bs4 import BeautifulSoup
 
 from skills.search.providers.base import SearchProvider, SearchResult
 
-class DuckDuckGoHtmlProvider(SearchProvider):
-    name = "ddg_html"
+class DuckDuckGoLiteProvider(SearchProvider):
+    name = "ddg_lite"
 
     def _clean_url(self, raw: str) -> str | None:
         if not raw:
@@ -27,7 +27,7 @@ class DuckDuckGoHtmlProvider(SearchProvider):
 
     async def search(self, query: str, max_results: int = 5) -> List[SearchResult]:
         self.last_error = None
-        url = f"https://html.duckduckgo.com/html/?q={query.replace(' ', '+')}"
+        url = f"https://lite.duckduckgo.com/lite/?q={query.replace(' ', '+')}"
         self.last_url = url
         headers = {
             "User-Agent": "Mozilla/5.0",
@@ -49,23 +49,18 @@ class DuckDuckGoHtmlProvider(SearchProvider):
         soup = BeautifulSoup(html, "html.parser")
         results: List[SearchResult] = []
         rank = 1
-        for res in soup.select("div.result"):
-            link = res.select_one("a.result__a")
-            snippet = res.select_one("a.result__snippet") or res.select_one("div.result__snippet")
-            if not link:
-                continue
+        for link in soup.select("a.result-link"):
             href = link.get("href")
             cleaned = self._clean_url(href)
             if not cleaned:
                 continue
-            title = link.get_text(strip=True)
-            snip = snippet.get_text(" ", strip=True) if snippet else ""
+            title = link.get_text(" ", strip=True)
             results.append(
                 SearchResult(
                     url=cleaned,
                     domain=urlparse(cleaned).netloc,
                     title=title,
-                    snippet=snip,
+                    snippet="",
                     rank=rank,
                     provider=self.name,
                     is_ad=False,

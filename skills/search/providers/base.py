@@ -18,6 +18,7 @@ class SearchProvider:
     last_url: str | None = None
     last_html_snippet: str | None = None
     last_error: str | None = None
+    last_status: int | None = None
 
     async def search(self, query: str, max_results: int = 5) -> List[SearchResult]:
         raise NotImplementedError
