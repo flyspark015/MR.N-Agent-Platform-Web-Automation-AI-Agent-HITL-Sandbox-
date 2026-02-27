@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from pathlib import Path
 from typing import Any, Dict
 
@@ -9,7 +10,8 @@ CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def cache_path(key: str) -> Path:
-    return CACHE_DIR / f"{key}.json"
+    digest = hashlib.sha256(key.encode("utf-8")).hexdigest()[:16]
+    return CACHE_DIR / f"{digest}.json"
 
 
 def get_cache(key: str) -> Dict[str, Any] | None:

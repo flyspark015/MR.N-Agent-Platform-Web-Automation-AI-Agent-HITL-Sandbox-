@@ -41,21 +41,34 @@ async def extract_structured(goal: str, source_url: str, text: str) -> Dict[str,
         "text": text,
     }
 
-    response = client.responses.create(
-        model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-        input=[
-            {"role": "system", "content": "Extract structured facts. Return JSON only."},
-            {"role": "user", "content": json.dumps(payload)},
-        ],
-        text={
-            "format": {
-                "type": "json_schema",
-                "name": "structured_extraction",
-                "schema": STRUCTURED_SCHEMA,
-                "strict": True,
-            }
-        },
-    )
+    try:
+        if hasattr(client, "responses"):
+            response = client.responses.create(
+                model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+                input=[
+                    {"role": "system", "content": "Extract structured facts. Return JSON only."},
+                    {"role": "user", "content": json.dumps(payload)},
+                ],
+                text={
+                    "format": {
+                        "type": "json_schema",
+                        "name": "structured_extraction",
+                        "schema": STRUCTURED_SCHEMA,
+                        "strict": True,
+                    }
+                },
+            )
+            data = json.loads(response.output_text)
+            return data
+    except Exception:
+        pass
 
-    data = json.loads(response.output_text)
-    return data
+    # Fallback: minimal structured output when Responses API is unavailable
+    return {
+        "claims": [],
+        "statistics": [],
+        "dates": [],
+        "contradictions": [],
+        "definitions": [],
+        "source_url": source_url,
+    }

@@ -83,7 +83,7 @@ class PlaybookRunner:
         try:
             runtime = RuntimeContext(session=session, config=config, emit=emit)
             await playbook.execute(runtime, state)
-            critic = await evaluate(goal, await get_snapshot(session.page, config.task_id, 0, 0), [])
+            critic = evaluate(goal, await get_snapshot(session.page, config.task_id, 0, 0), [])
             state.coverage_score = 1.0 if critic.get("goal_met") else 0.5
             state.completion_status = "DONE" if critic.get("goal_met") else "PARTIAL"
         finally:

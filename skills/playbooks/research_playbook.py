@@ -9,7 +9,7 @@ from agent.critic import evaluate_research_coverage
 from browser.perceive import get_snapshot
 from browser.tools import execute_action
 from skills.research.extract import extract_structured
-from skills.research.query_engine import generate_query_variants
+from core.research_service import discover_sources
 from skills.research.source_scoring import score_source
 from skills.research.synthesis import synthesize
 from storage.fs import run_dir
@@ -28,50 +28,35 @@ class ResearchPlaybook:
         return None
 
     async def execute(self, runtime, state) -> None:
-        queries = await generate_query_variants(state.goal)
-        used = 0
-
-        for item in queries:
-            if used >= self.max_query_budget:
-                break
-            used += 1
-
+        sources = await discover_sources(
+            state.goal,
+            task_id=runtime.config.task_id,
+            emit=runtime.emit,
+        )
+        for i, url in enumerate(sources[: self.top_n]):
             await execute_action(
-                Action(type="google_search", query=item["query"], reason="research search"),
+                Action(type="navigate", url=url, reason="research source"),
                 runtime.session.page,
                 runtime.config.task_id,
                 {"goal": state.goal},
             )
+            snap = await get_snapshot(runtime.session.page, runtime.config.task_id, i + 1, 0)
+            domain = urlparse(snap.url).netloc
+            self.domains.add(domain)
+            source = {"url": snap.url, "title": snap.title, "text": snap.visible_text_summary}
+            self.sources.append(source)
+            state.sources_visited.append(snap.url)
+            runtime.emit(
+                "SNAPSHOT",
+                f"{snap.url} | {snap.title} | screenshot={snap.screenshot_path}",
+                {"url": snap.url, "title": snap.title, "screenshot_path": snap.screenshot_path},
+            )
 
-            for i in range(self.top_n):
-                await execute_action(
-                    Action(type="open_result", input_text=str(i), reason="open result"),
-                    runtime.session.page,
-                    runtime.config.task_id,
-                    {"goal": state.goal},
-                )
-                snap = await get_snapshot(runtime.session.page, runtime.config.task_id, i + 1, used)
-                domain = urlparse(snap.url).netloc
-                self.domains.add(domain)
-                source = {"url": snap.url, "title": snap.title, "text": snap.visible_text_summary}
-                self.sources.append(source)
-                state.sources_visited.append(snap.url)
-                runtime.emit(
-                    "SNAPSHOT",
-                    f"{snap.url} | {snap.title} | screenshot={snap.screenshot_path}",
-                    {"url": snap.url, "title": snap.title, "screenshot_path": snap.screenshot_path},
-                )
+            extraction = await extract_structured(state.goal, snap.url, snap.visible_text_summary)
+            self.extractions.append(extraction)
 
-                extraction = await extract_structured(state.goal, snap.url, snap.visible_text_summary)
-                self.extractions.append(extraction)
-
-                score = score_source(snap.url)
-                self.scores.append(score.__dict__)
-
-            if len(self.domains) >= self.min_domains:
-                coverage = evaluate_research_coverage(list(self.domains), self.extractions, [score_source(s["url"]) for s in self.scores])
-                if not coverage["continue_required"]:
-                    break
+            score = score_source(snap.url)
+            self.scores.append(score.__dict__)
 
         synthesis = synthesize(self.extractions, [score_source(s["url"]) for s in self.scores])
 

@@ -59,22 +59,25 @@ async def generate_query_variants(goal: str) -> List[dict]:
     timeout = float(os.getenv("OPENAI_TIMEOUT", "20"))
     client = OpenAI(api_key=api_key, timeout=timeout)
     try:
-        response = client.responses.create(
-            model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-            input=[
-                {"role": "system", "content": SYSTEM},
-                {"role": "user", "content": goal},
-            ],
-            text={
-                "format": {
-                    "type": "json_schema",
-                    "name": "queries",
-                    "schema": QUERY_SCHEMA,
-                    "strict": True,
-                }
-            },
-        )
-        data = json.loads(response.output_text)
-        return data["queries"]
+        if hasattr(client, "responses"):
+            response = client.responses.create(
+                model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+                input=[
+                    {"role": "system", "content": SYSTEM},
+                    {"role": "user", "content": goal},
+                ],
+                text={
+                    "format": {
+                        "type": "json_schema",
+                        "name": "queries",
+                        "schema": QUERY_SCHEMA,
+                        "strict": True,
+                    }
+                },
+            )
+            data = json.loads(response.output_text)
+            return data["queries"]
     except Exception:
         return _fallback_queries(goal)
+
+    return _fallback_queries(goal)

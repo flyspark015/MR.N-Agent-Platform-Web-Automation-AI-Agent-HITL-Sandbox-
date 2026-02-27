@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import List
 
 from core.research_service import discover_sources, rank_sites
@@ -18,12 +19,17 @@ class DataScrapingPlaybook:
         return None
 
     async def execute(self, runtime, state) -> None:
-        sources = await discover_sources(
-            state.goal,
-            task_id=runtime.config.task_id,
-            emit=runtime.emit,
-        )
-        ranked = await rank_sites(sources)
+        url_match = re.search(r"https?://\S+", state.goal)
+        if url_match:
+            sources = [url_match.group(0)]
+            ranked = [{"url": sources[0], "score": 100, "source_type": "direct"}]
+        else:
+            sources = await discover_sources(
+                state.goal,
+                task_id=runtime.config.task_id,
+                emit=runtime.emit,
+            )
+            ranked = await rank_sites(sources)
 
         if ranked:
             await execute_action(Action(type="navigate", url=ranked[0]["url"], reason="authoritative source"), runtime.session.page, runtime.config.task_id, {"goal": state.goal})

@@ -33,21 +33,30 @@ class SupplierPlaybook:
         ranked = await rank_sites(sources)
 
         for item in ranked[: self.top_n]:
-            await execute_action(Action(type="navigate", url=item["url"], reason="supplier source"), runtime.session.page, runtime.config.task_id, {"goal": state.goal})
-            snap = await get_snapshot(runtime.session.page, runtime.config.task_id, 1, 0)
-            state.sources_visited.append(snap.url)
+            try:
+                await execute_action(
+                    Action(type="navigate", url=item["url"], reason="supplier source"),
+                    runtime.session.page,
+                    runtime.config.task_id,
+                    {"goal": state.goal},
+                )
+                snap = await get_snapshot(runtime.session.page, runtime.config.task_id, 1, 0)
+                state.sources_visited.append(snap.url)
 
-            emails = EMAIL_RE.findall(snap.visible_text_summary)
-            prices = PRICE_RE.findall(snap.visible_text_summary)
-            self.rows.append(
-                {
-                    "company": snap.title,
-                    "product": state.goal,
-                    "price": prices[0] if prices else "",
-                    "contact": emails[0] if emails else "",
-                    "url": snap.url,
-                }
-            )
+                emails = EMAIL_RE.findall(snap.visible_text_summary)
+                prices = PRICE_RE.findall(snap.visible_text_summary)
+                self.rows.append(
+                    {
+                        "company": snap.title,
+                        "product": state.goal,
+                        "price": prices[0] if prices else "",
+                        "contact": emails[0] if emails else "",
+                        "url": snap.url,
+                    }
+                )
+            except Exception:
+                runtime.emit("ERROR", f"Supplier source failed: {item['url']}")
+                continue
 
         df = pd.DataFrame(self.rows)
         csv_path = save_table_csv(runtime.config.task_id, "suppliers", df)

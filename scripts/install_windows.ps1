@@ -1,12 +1,12 @@
 param(
-  [string] = "C:\Users\toy4y\bin"
+  [string]$BinDir = "$env:USERPROFILE\bin"
 )
 
-Continue = "Stop"
+$ErrorActionPreference = "Stop"
 
 try {
-  if (-not (Test-Path )) {
-    New-Item -ItemType Directory -Force -Path  | Out-Null
+  if (-not (Test-Path $BinDir)) {
+    New-Item -ItemType Directory -Force -Path $BinDir | Out-Null
   }
 
   if (-not (Test-Path ".venv")) {
@@ -15,28 +15,43 @@ try {
 
   . .\.venv\Scripts\activate
   pip install -r requirements.txt
-  python -m playwright install chromium
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host "Install failed"
+    exit 1
+  }
 
-   = @'
+  python -m playwright install chromium
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host "Install failed"
+    exit 1
+  }
+
+  $shim = @'
 param()
-Set-Location "\..\mrn"
+Set-Location "{REPO_DIR}"
 . .\.venv\Scripts\activate
 python -m apps.cli.main
 '@
 
-   = Join-Path  "mrn.ps1"
-   | Set-Content -Encoding ASCII 
+  $repoDir = (Resolve-Path ".").Path
+  $shim = $shim.Replace("{REPO_DIR}", $repoDir)
+  $shimPath = Join-Path $BinDir "mrn.ps1"
+  $shim | Set-Content -Encoding ASCII -Path $shimPath
 
-   = [Environment]::GetEnvironmentVariable("PATH", "User")
-  if ( -notlike "**") {
-    [Environment]::SetEnvironmentVariable("PATH", ";", "User")
-    Write-Host "Added  to PATH (User). Restart PowerShell to use 'mrn'."
+  $userPath = [Environment]::GetEnvironmentVariable("PATH", "User")
+  if (-not $userPath) { $userPath = "" }
+  if ($userPath -notlike "*$BinDir*") {
+    $newPath = $userPath.TrimEnd(";")
+    if ($newPath) { $newPath += ";" }
+    $newPath += $BinDir
+    [Environment]::SetEnvironmentVariable("PATH", $newPath, "User")
+    Write-Host "Added $BinDir to PATH (User). Restart PowerShell to use 'mrn'."
   }
 
   Write-Host "Install complete. Open a new PowerShell window and run: mrn"
 }
 catch {
   Write-Host "Install failed"
-  Write-Host 
+  Write-Host $_
   exit 1
 }

@@ -70,3 +70,5 @@ Self-test fixes (2026-02-27):
 - [x] Windows py313 deps: greenlet/playwright compatibility
 - [x] Discovery fallback heuristics + provider hardening
 - [x] Benchmark stability mode (fast discovery)
+- [x] Installer repair + mrn launcher validation
+- [x] Playbook stability (research/supplier/table runs)
